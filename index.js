@@ -11,6 +11,7 @@ const host=process.env.host || "localhost"
 const port=process.env.PORT || 5000
 
 app.set('view engine', 'ejs')
+app.use(express.static("public"));
 
 app.use(express.urlencoded({
     extended: false
@@ -44,17 +45,17 @@ app.post('/shortURL', async(req, res)=>{
     */
     
     // if the generated url (shortUrlGenerated) matches in the db, then regenerate
-    while(checkIfAlreadyPresent(shortUrlGenerated)==true){
+    while(checkIfAlreadyPresent(shortUrlGenerated)===true){
         console.log("Short URL already exists, regenerate.")
         shortUrlGenerated=generateShortURL()
     }
     console.log("Short URL generated.")
     // create a new URL in the db
     await ShortUrl.create({
-        full: await req.body.fullUrl,
-        short: shortUrlGenerated,
-        clicks: 0
+        full:  req.body.fullUrl,
+        short: shortUrlGenerated
     })
+    console.log("Doc inserted");
 
     // this url is an Object {
         // short:
@@ -62,19 +63,22 @@ app.post('/shortURL', async(req, res)=>{
         // clicks:
     // }
     const url=await ShortUrl.findOne({full: req.body.fullUrl, short: shortUrlGenerated})
-    res.render('showURL', {url: await url})
+    res.render('showURL', {url: url})
 })
 
-// handling the 'get' request of 'short' URL
+// ?handling the 'get' request of 'short' URL
 // and redirecting it to 'full' URL
 app.get('/:shortUrl', async(req, res)=>{
+    console.log("Short url got: ", req.params.shortUrl);
+    console.log("type of shortURL: ", typeof req.params.shortUrl);
     const url=await ShortUrl.findOne({
         short: req.params.shortUrl
     })
 
+    console.log("URL: ", url);
     // shortened version -> url.short
     // full version -> url.full
-    res.redirect(await url.full)
+    res.redirect(url.full)
 })
 
 app.listen(port, ()=>{
