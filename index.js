@@ -12,6 +12,7 @@ const port=process.env.PORT || 5000
 
 app.set('view engine', 'ejs')
 app.use(express.static("public"));
+app.set('views', 'views');
 
 app.use(express.urlencoded({
     extended: false
